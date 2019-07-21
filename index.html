@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body{
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Snake Game</h1>
+    <canvas id="myCanvas" width="640" height="640" style="border: solid 1px #000">
+    <script>
+      const S = 16;
+      let movementX = 1;
+      let movementY = 0;
+
+      function Square(x, y, ctx){
+        this.x = x;
+        this.y = y;
+        this.ctx = ctx;
+
+        this.getPosition = function(){
+          return [this.x, this.y];
+        }
+
+        this.translate = function(pos){
+          this.x = pos[0];
+          this.y = pos[1];
+        }
+
+        this.draw = function(){
+          ctx.fillRect(this.x, this.y, S, S);
+        }
+      }
+
+      function movementController(e){
+        if(e.key == null)
+          return;
+        switch(e.key){
+          case 'a':
+            movementX = -1;
+            movementY = 0;
+            break;
+          case 'd':
+            movementX = 1;
+            movementY = 0;
+            break;
+          case 'w':
+            movementX = 0;
+            movementY = 1;
+            break;
+          case 's':
+            movementX = 0;
+            movementY = -1;
+            break;
+        }
+      }
+
+      function moveLeader(r){
+        pos = r.getPosition();
+
+        r.translate([pos[0] + S*movementX, pos[1] + S*movementY]);
+      }
+
+      function score(ctx){
+        x = Math.floor(320 * Math.random());
+        y = Math.floor(320 * Math.random());
+        x -= x % S;
+        y -= y % S;
+        return new Square(x, y, ctx);
+      }
+
+      function checkScore(leader, score){
+        return (leader.x == score.x && leader.y == score.y)
+      }
+
+      document.addEventListener("keypress", movementController);
+      let canvas = document.getElementById("myCanvas");
+      let ctx = canvas.getContext("2d");
+
+      let snake = [new Square(320, 320, ctx)];
+      let point = score(ctx);
+
+      var drawInter = setInterval(()=>{
+        lastR = snake[snake.length-1].getPosition();
+        for(let i=1; i<snake.length; i++){
+          snake[i].translate(snake[i-1].getPosition());
+        }
+        moveLeader(snake[0]);
+        if(checkScore(snake[0], point)){
+          snake.push(new Square(lastR[0], lastR[1], ctx));
+          point = score(ctx);
+        }
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, 640, 640);
+        ctx.fillStyle = "#000";
+        snake.forEach(function(r){
+          r.draw();
+          point.draw();
+        });
+
+      }, 500);
+    </script>
+  </body>
+</html>
