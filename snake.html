@@ -1,0 +1,134 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body{
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Snake Game</h1>
+    <canvas id="myCanvas" width="500" height="500" style="border: solid 1px #000">
+    <script>
+      const S = 50;
+      let movementX = 1;
+      let movementY = 1;
+
+      function Square(x, y, ctx, color){
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.ctx = ctx;
+
+        this.getPosition = function(){
+          return [this.x, this.y];
+        }
+        this.translate = function(pos){
+          this.x = pos[0];
+          this.y = pos[1];
+        }
+        this.draw = function(){
+          ctx.fillStyle = this.color;
+          ctx.fillRect(this.x, this.y, S, S);
+        }
+      }
+      function movementController(e){
+        if(e.key == null)
+          return;
+        switch(e.key){
+          case 'a':
+            movementX = -1;
+            movementY = 0;
+            break;
+          case 'A':
+            movementX = -1;
+            movementY = 0;
+            break;
+          case 'D':
+            movementX = 1;
+            movementY = 0;
+            break;
+          case 'S':
+            movementX = 0;
+            movementY = 1;
+            break;
+          case 'W':
+            movementX = 0;
+            movementY = -1;
+            break;
+          case 'd':
+            movementX = 1;
+            movementY = 0;
+            break;
+          case 's':
+            movementX = 0;
+            movementY = 1;
+            break;
+          case 'w':
+            movementX = 0;
+            movementY = -1;
+            break;
+        }
+      }
+
+      function moveLeader(r){
+        pos = r.getPosition();
+        let xmov, ymov = 0;
+        if((pos[0] <= 0 || pos[0] >= 500) && (pos[1] <= 0 || pos[1] >=500)){
+          xmov = (S*movementX);
+          ymov = (S*movementY);
+        }else{
+          xmov = (S*movementX);
+          ymov = (S*movementY);
+        }
+
+        r.translate([pos[0] + xmov, pos[1] + ymov]);
+      }
+
+      function scoreGen(ctx, color){
+        x = Math.floor(250 * Math.random());
+        y = Math.floor(250 * Math.random());
+        x -= x%S;
+        y -= y%S;
+
+
+        return new Square(x, y, ctx, color);
+      }
+      function checkscoreGen(leader, scoreGen){
+        return (leader.x == scoreGen.x && leader.y == scoreGen.y);
+      }
+      document.addEventListener("keypress", movementController);
+      let canvas = document.getElementById("myCanvas");
+      let ctx = canvas.getContext("2d");
+      let color = "red";
+
+      let snake = [new Square(S, S, ctx, color)];
+      let point = scoreGen(ctx);
+      var drawInter = setInterval(()=>{
+
+        lastR = snake[snake.length-1].getPosition();
+
+        for(let i=1; i<snake.length; i++){
+          let cur_pos = snake[i].getPosition();// returns [this.x, this.y]
+          snake[i].translate(cur_pos % S);
+        }
+        moveLeader(snake[0]);
+        // checking if we need to add to our snake. AKA if we scoreGend
+        while(checkscoreGen(snake[0], point)){
+          let color = "blue";
+          let snake_addition = [new Square(lastR[0], lastR[1], ctx, color)];
+          snake.push(snake_addition);
+          point = scoreGen(ctx); // returns a new point
+        }
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, 500, 500);
+        snake.forEach(function(r){
+          r.draw();
+          point.draw();
+        });
+      }, 200); // runs every .2 seconds
+    </script>
+  </body>
+</html>
