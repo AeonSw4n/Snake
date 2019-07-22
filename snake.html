@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body{
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Snake Game</h1>
+    <canvas id="myCanvas" width="500" height="500" style="border: solid 1px #000">
+    <script>
+      const S = 50;
+      let movementX = 1;
+      let movementY = 1;
+      let movingXpos = false;
+      let movingXneg = true;
+      let movingYpos = false;
+      let movingYneg = true;
+
+
+      function Square(x, y, ctx, color){
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.ctx = ctx;
+
+        this.getPosition = function(){
+          return [this.x, this.y];
+        }
+        this.translate = function(pos){
+          this.x = pos[0];
+          this.y = pos[1];
+        }
+        this.draw = function(){
+          ctx.fillStyle = this.color;
+          ctx.fillRect(this.x, this.y, S, S);
+        }
+      }
+      function movementController(e){
+        if(e.key == null)
+          return;
+        switch(e.key){
+          case 'a':
+            movementX = -1;
+            movementY = 0;
+            movingXneg = true;
+            movingXpos = false;
+            break;
+          case 'A':
+            movementX = -1;
+            movementY = 0;
+            movingXneg = true;
+            movingXpos = false;
+            break;
+          case 'D':
+            movementX = 1;
+            movementY = 0;
+            movingXpos = true;
+            movingXneg = false;
+            break;
+          case 'S':
+            movementX = 0;
+            movementY = 1;
+            movingYneg = true;
+            movingYpos = false; // this is because y coordinates run backwards on web-brower canvas
+            break;
+          case 'W':
+            movementX = 0;
+            movementY = -1;
+            movingYpos = true;
+            movingYneg = false;
+            break;
+          case 'd':
+            movementX = 1;
+            movementY = 0;
+            movingXpos = true;
+            movingXneg = false;
+            break;
+          case 's':
+            movementX = 0;
+            movementY = 1;
+            movingYneg = true;
+            movingYpos = false;
+            break;
+          case 'w':
+            movementX = 0;
+            movementY = -1;
+            movingYpos = true;
+            movingYneg = false;
+            break;
+        }
+      }
+
+      function moveLeader(r){
+
+        pos = r.getPosition();
+        let x_pos = pos[0];
+        let y_pos = pos[1];
+
+        let xmov, ymov = 0;
+
+        if(x_pos == 0 && movingXneg == true){
+          xmov = (500);
+          ymov = (S*movementY);
+        }else if(x_pos == 500 && movingXpos == true){
+          xmov = (0);
+          ymov = (S*movementY);
+        }else if(y_pos == 0 && movingYpos == true){
+          xmov = (S*movementX);
+          ymov = (500);
+        }else if(y_pos == 500 && movingXneg == true){
+          xmov = (S*movementX);
+          ymov = (0);
+        }else{
+          xmov = (S*movementX);
+          ymov = (S*movementY);
+        }
+
+        r.translate([x_pos + xmov, y_pos + ymov]);
+      }
+
+      function scoreGen(ctx, color){
+        x = Math.floor(250 * Math.random());
+        y = Math.floor(250 * Math.random());
+        x -= x%S;
+        y -= y%S;
+
+
+        return new Square(x, y, ctx, color);
+      }
+      function checkscoreGen(leader, scoreGen){
+        return (leader.x == scoreGen.x && leader.y == scoreGen.y);
+      }
+      document.addEventListener("keypress", movementController);
+      let canvas = document.getElementById("myCanvas");
+      let ctx = canvas.getContext("2d");
+      let color = "red";
+
+      let snake = [new Square(S, S, ctx, color)];
+      let point = scoreGen(ctx);
+      var drawInter = setInterval(()=>{
+
+        lastR = snake[snake.length-1].getPosition();
+
+        for(let i=1; i<snake.length; i++){
+          let cur_pos = snake[i].getPosition();// returns [this.x, this.y]
+          let x_pos = cur_pos[0];
+          let y_pos = cur_pos[1];
+
+          if(x_pos == 0 && movingXneg == true){
+            let next_pos = [500, y_pos];
+            snake[i].translate(next_pos);
+          }else if(x_pos == 500 && movingXpos == true){
+            let next_pos = [0, y_pos];
+            snake[i].translate(next_pos);
+          }else if(y_pos == 0 && movingYpos == true){
+            let next_pos = [x_pos, 500];
+            snake[i].translate(next_pos);
+          }else if(y_pos == 500 && movingYneg == true){
+            let next_pos = [x_pos, 0];
+            snake[i].translate(next_pos);
+          }else{
+            snake[i].translate(snake[i-1].getPosition());
+          }
+        }
+        moveLeader(snake[0]); // her
+        // checking if we need to add to our snake. AKA if we scoreGend
+        while(checkscoreGen(snake[0], point)){
+          let color = "blue";
+
+          let snake_addition = [new Square(lastR[0], lastR[1], ctx, color)];
+          snake.push(snake_addition);
+          point = scoreGen(ctx); // returns a new point
+        }
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, 500, 500);
+        snake.forEach(function(r){
+          r.draw();
+          point.draw();
+        });
+      }, 200); // runs every .2 seconds
+    </script>
+  </body>
+</html>
