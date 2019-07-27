@@ -8,20 +8,36 @@
     </style>
   </head>
   <body>
-    <h1>Snake Game</h1>
+    <h1 id="header">Snake Game</h1>
+    <p id="score">Score: 1</p>
     <canvas id="myCanvas" width="640" height="640" style="border: solid 1px #000">
     <script>
-      const S = 16;
+      const S = 32;
+      const SIZE = 640;
       let movementX = 1;
       let movementY = 0;
+      let keyPressed = false;
+      let gameEnd = false;
 
-      function Square(x, y, ctx){
+      function updateDOM(){
+        if(gameEnd)
+          document.getElementById("header").innerHTML = "You Lost!";
+        document.getElementById("score").innerHTML = "Score: " + snake.length.toString();
+      }
+
+      function Square(x, y, ctx, shape = "S", color = "#000"){
         this.x = x;
         this.y = y;
         this.ctx = ctx;
+        this.shape = shape;
+        this.color = color;
 
         this.getPosition = function(){
           return [this.x, this.y];
+        }
+
+        this.isIntersecting = function(pos){
+          return this.x == pos[0] && this.y == pos[1];
         }
 
         this.translate = function(pos){
@@ -30,45 +46,89 @@
         }
 
         this.draw = function(){
-          ctx.fillRect(this.x, this.y, S, S);
+          ctx.fillStyle = this.color;
+          if(this.shape == "C"){
+            ctx.beginPath();
+            ctx.arc(this.x+S/2, this.y+S/2, S/2, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+          else
+            ctx.fillRect(this.x, this.y, S, S);
+          ctx.fillStyle = "#000";
         }
       }
 
       function movementController(e){
         if(e.key == null)
           return;
+        if(keyPressed)
+          return;
         switch(e.key){
           case 'a':
+            if(movementX == 1 && snake.length > 1)
+              break;
+            keyPressed = true;
             movementX = -1;
             movementY = 0;
             break;
           case 'd':
+            if(movementX == -1 && snake.length > 1)
+              break;
+            keyPressed = true;
             movementX = 1;
             movementY = 0;
             break;
           case 'w':
-            movementX = 0;
-            movementY = 1;
-            break;
-          case 's':
+            if(movementY == 1 && snake.length > 1)
+              break;
+            keyPressed = true;
             movementX = 0;
             movementY = -1;
+            break;
+          case 's':
+            if(movementY == -1 && snake.length > 1)
+              break;
+            keyPressed = true;
+            movementX = 0;
+            movementY = 1;
             break;
         }
       }
 
       function moveLeader(r){
-        pos = r.getPosition();
-
-        r.translate([pos[0] + S*movementX, pos[1] + S*movementY]);
+        let pos = r.getPosition();
+        let x = pos[0] + S*movementX;
+        let y = pos[1] + S*movementY;
+        if(x < 0)
+          x += SIZE;
+        else if(x == SIZE)
+          x -= SIZE;
+        if(y < 0)
+          y += SIZE;
+        else if(y == SIZE)
+          y -= SIZE;
+        r.translate([x, y]);
+        for(let i = 1; i<snake.length; i++)
+          if(snake[i].isIntersecting([x, y]))
+            return false;
+        return true;
       }
 
       function score(ctx){
-        x = Math.floor(320 * Math.random());
-        y = Math.floor(320 * Math.random());
+        x = Math.floor(SIZE * Math.random());
+        y = Math.floor(SIZE * Math.random());
         x -= x % S;
         y -= y % S;
-        return new Square(x, y, ctx);
+        let isIntersecting = false;
+        for(let i=0; i<snake.legth; i++)
+          if(snake[i].isIntersecting([x, y])){
+            isIntersecting = true;
+            break;
+          }
+        if(isIntersecting)
+          return score(ctx);
+        else
+          return new Square(x, y, ctx, "C", "#888888");
       }
 
       function checkScore(leader, score){
@@ -79,15 +139,16 @@
       let canvas = document.getElementById("myCanvas");
       let ctx = canvas.getContext("2d");
 
-      let snake = [new Square(320, 320, ctx)];
+      let snake = [new Square(SIZE/2, SIZE/2, ctx)];
       let point = score(ctx);
 
       var drawInter = setInterval(()=>{
+        keyPressed = false;
         lastR = snake[snake.length-1].getPosition();
-        for(let i=1; i<snake.length; i++){
+        for(let i=snake.length-1; i>0; i--){
           snake[i].translate(snake[i-1].getPosition());
         }
-        moveLeader(snake[0]);
+        let validMove = moveLeader(snake[0]);
         if(checkScore(snake[0], point)){
           snake.push(new Square(lastR[0], lastR[1], ctx));
           point = score(ctx);
@@ -99,8 +160,12 @@
           r.draw();
           point.draw();
         });
-
-      }, 500);
+        if(!validMove){
+          gameEnd = true;
+          clearInterval(drawInter);
+        }
+        updateDOM();
+      }, 250);
     </script>
   </body>
 </html>
