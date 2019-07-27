@@ -12,7 +12,7 @@
     <p id="score">Score: 1</p>
     <canvas id="myCanvas" width="640" height="640" style="border: solid 1px #000">
     <script>
-      const S = 32;
+      const S = 64;
       const SIZE = 640;
       let movementX = 1;
       let movementY = 0;
@@ -43,6 +43,10 @@
         this.translate = function(pos){
           this.x = pos[0];
           this.y = pos[1];
+        }
+
+        this.setColor = function(color){
+          this.color = color;
         }
 
         this.draw = function(){
@@ -115,12 +119,12 @@
       }
 
       function score(ctx){
-        x = Math.floor(SIZE * Math.random());
-        y = Math.floor(SIZE * Math.random());
+        let x = Math.floor(SIZE * Math.random());
+        let y = Math.floor(SIZE * Math.random());
         x -= x % S;
         y -= y % S;
         let isIntersecting = false;
-        for(let i=0; i<snake.legth; i++)
+        for(let i=0; i<snake.length; i++)
           if(snake[i].isIntersecting([x, y])){
             isIntersecting = true;
             break;
@@ -128,7 +132,7 @@
         if(isIntersecting)
           return score(ctx);
         else
-          return new Square(x, y, ctx, "C", "#888888");
+          return new Square(x, y, ctx, "C", "#00ff00");
       }
 
       function checkScore(leader, score){
@@ -139,7 +143,7 @@
       let canvas = document.getElementById("myCanvas");
       let ctx = canvas.getContext("2d");
 
-      let snake = [new Square(SIZE/2, SIZE/2, ctx)];
+      let snake = [new Square(SIZE/2, SIZE/2, ctx, "S")];
       let point = score(ctx);
 
       var drawInter = setInterval(()=>{
@@ -150,7 +154,26 @@
         }
         let validMove = moveLeader(snake[0]);
         if(checkScore(snake[0], point)){
-          snake.push(new Square(lastR[0], lastR[1], ctx));
+          let color = 10.20 * snake.length;
+          color = Math.round(color) % 200;
+          if(color < 16)
+            color = "0"+color.toString(16);
+          else
+            color = color.toString(16);
+          console.log(color);
+          snake.push(new Square(lastR[0], lastR[1], ctx, "C", "#"+color+color+color));
+          if(snake.length > 20){
+            for(let i=0; i<snake.length; i++){
+              let color = i*200.0/snake.length;
+              color = Math.round(color);
+              if(color < 16)
+                color = "0"+color.toString(16);
+              else
+                color = color.toString(16);
+              snake[i].setColor("#"+color+color+color);
+            }
+
+          }
           point = score(ctx);
         }
         ctx.fillStyle = "#fff";
@@ -165,7 +188,7 @@
           clearInterval(drawInter);
         }
         updateDOM();
-      }, 250);
+      }, 150);
     </script>
   </body>
 </html>
